@@ -12,6 +12,16 @@ import { useAuth } from "../../contexts/AuthContext";
 const EmployeeHomeScreen = ({ navigation }) => {
   const { currentUser, logout } = useAuth();
 
+  const handleLogout = async () => {
+    try {
+      // Just call logout and let the AppNavigator handle the navigation
+      await logout();
+      console.log("Logout successful");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -60,7 +70,7 @@ const EmployeeHomeScreen = ({ navigation }) => {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>

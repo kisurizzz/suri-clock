@@ -8,13 +8,39 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  getDoc,
+  doc,
+} from "firebase/firestore";
 import { db } from "../../services/firebase";
 
 const ReportsScreen = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [userNames, setUserNames] = useState({});
+
+  const fetchUserData = async (userId) => {
+    try {
+      if (!userNames[userId]) {
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const fullName = `${userData.firstName} ${userData.lastName}`;
+          setUserNames((prev) => ({ ...prev, [userId]: fullName }));
+          return fullName;
+        }
+      }
+      return userNames[userId];
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      return null;
+    }
+  };
 
   const fetchSessions = async () => {
     try {
@@ -30,6 +56,35 @@ const ReportsScreen = () => {
         ...doc.data(),
       }));
 
+      console.log("Fetched sessions:", sessionsData.length);
+
+      // Fetch user names for each session
+      if (sessionsData.length > 0) {
+        // Create a map of unique user IDs to avoid duplicate fetches
+        const uniqueUserIds = [
+          ...new Set(
+            sessionsData.map((session) => session.userId).filter(Boolean)
+          ),
+        ];
+
+        console.log("Unique user IDs:", uniqueUserIds.length);
+
+        // Fetch names for all unique users
+        for (const userId of uniqueUserIds) {
+          try {
+            const userDoc = await getDoc(doc(db, "users", userId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const fullName = `${userData.firstName} ${userData.lastName}`;
+              console.log(`Fetched name for ${userId}: ${fullName}`);
+              setUserNames((prev) => ({ ...prev, [userId]: fullName }));
+            }
+          } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+          }
+        }
+      }
+
       setSessions(sessionsData);
     } catch (error) {
       console.error("Error fetching sessions:", error);
@@ -38,6 +93,10 @@ const ReportsScreen = () => {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    console.log("Current user names:", Object.keys(userNames).length);
+  }, [userNames]);
 
   useEffect(() => {
     fetchSessions();
@@ -60,41 +119,76 @@ const ReportsScreen = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  const renderSession = ({ item }) => (
-    <View style={styles.sessionCard}>
-      <View style={styles.sessionHeader}>
-        <Text style={styles.userEmail}>{item.userEmail}</Text>
-        <Text style={styles.date}>
-          {new Date(item.clockInTime.toDate()).toLocaleDateString()}
-        </Text>
-      </View>
+  const getUserName = (item) => {
+    // Check if we have a name in our cache
+    if (item.userId && userNames[item.userId]) {
+      return userNames[item.userId];
+    }
 
-      <View style={styles.sessionDetails}>
-        <View style={styles.timeBlock}>
-          <Text style={styles.timeLabel}>Clock In</Text>
-          <Text style={styles.timeValue}>{formatTime(item.clockInTime)}</Text>
+    // If no userId or no cached name, fall back to email with a warning
+    if (!item.userId) {
+      console.warn("Session missing userId:", item.id);
+    } else if (!userNames[item.userId]) {
+      console.warn(`No name found for user ${item.userId}`);
+    }
+
+    // Return email or a fallback
+    return item.userEmail || "Unknown User";
+  };
+
+  const renderSession = ({ item }) => {
+    const userName = getUserName(item);
+    const hasName = item.userId && userNames[item.userId];
+
+    return (
+      <View style={styles.sessionCard}>
+        <View style={styles.sessionHeader}>
+          <View style={styles.userInfo}>
+            {hasName ? (
+              <>
+                <Text style={styles.userName}>{userName}</Text>
+                <Text style={styles.userEmail}>{item.userEmail}</Text>
+              </>
+            ) : (
+              <Text style={styles.userName}>{item.userEmail}</Text>
+            )}
+          </View>
+          <Text style={styles.date}>
+            {new Date(item.clockInTime.toDate()).toLocaleDateString()}
+          </Text>
         </View>
 
-        <View style={styles.timeBlock}>
-          <Text style={styles.timeLabel}>Clock Out</Text>
-          <Text style={styles.timeValue}>{formatTime(item.clockOutTime)}</Text>
+        <View style={styles.sessionDetails}>
+          <View style={styles.timeBlock}>
+            <Text style={styles.timeLabel}>Clock In</Text>
+            <Text style={styles.timeValue}>{formatTime(item.clockInTime)}</Text>
+          </View>
+
+          <View style={styles.timeBlock}>
+            <Text style={styles.timeLabel}>Clock Out</Text>
+            <Text style={styles.timeValue}>
+              {formatTime(item.clockOutTime)}
+            </Text>
+          </View>
+
+          <View style={styles.timeBlock}>
+            <Text style={styles.timeLabel}>Duration</Text>
+            <Text style={styles.timeValue}>
+              {formatDuration(item.totalTime)}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.timeBlock}>
-          <Text style={styles.timeLabel}>Duration</Text>
-          <Text style={styles.timeValue}>{formatDuration(item.totalTime)}</Text>
+        <View style={styles.locationInfo}>
+          <Text style={styles.locationLabel}>Clock In Location:</Text>
+          <Text style={styles.locationValue}>
+            Lat: {item.clockInLocation.latitude.toFixed(6)}, Lon:{" "}
+            {item.clockInLocation.longitude.toFixed(6)}
+          </Text>
         </View>
       </View>
-
-      <View style={styles.locationInfo}>
-        <Text style={styles.locationLabel}>Clock In Location:</Text>
-        <Text style={styles.locationValue}>
-          Lat: {item.clockInLocation.latitude.toFixed(6)}, Lon:{" "}
-          {item.clockInLocation.longitude.toFixed(6)}
-        </Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   if (loading && !refreshing) {
     return (
@@ -161,14 +255,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  userEmail: {
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#2c3e50",
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 12,
+    color: "#7f8c8d",
   },
   date: {
     fontSize: 14,
     color: "#7f8c8d",
+    marginLeft: 8,
   },
   sessionDetails: {
     flexDirection: "row",

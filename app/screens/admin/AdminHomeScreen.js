@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
+import { CommonActions } from "@react-navigation/native";
 
 const AdminHomeScreen = ({ navigation }) => {
   const { currentUser, isAdmin, logout } = useAuth();
@@ -22,6 +23,7 @@ const AdminHomeScreen = ({ navigation }) => {
   const handleLogout = async () => {
     try {
       await logout();
+      console.log("Logout successful");
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -52,7 +54,7 @@ const AdminHomeScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => navigation.navigate("EmployeeDetails")}
+            onPress={() => navigation.navigate("EmployeeList")}
           >
             <Text style={styles.menuItemText}>Manage Employees</Text>
           </TouchableOpacity>

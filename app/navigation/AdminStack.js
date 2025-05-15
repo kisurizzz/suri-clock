@@ -4,6 +4,7 @@ import { customScreenOptions } from "./enableScreenOptions";
 import AdminHomeScreen from "../screens/admin/AdminHomeScreen";
 import ReportsScreen from "../screens/admin/ReportsScreen";
 import EmployeeDetailsScreen from "../screens/admin/EmployeeDetailsScreen";
+import EmployeeListScreen from "../screens/admin/EmployeeListScreen";
 import CreateAdminScreen from "../screens/admin/CreateAdminScreen";
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +34,14 @@ const AdminStack = () => {
         component={ReportsScreen}
         options={{
           title: "Employee Reports",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="EmployeeList"
+        component={EmployeeListScreen}
+        options={{
+          title: "Manage Employees",
           headerShown: true,
         }}
       />
