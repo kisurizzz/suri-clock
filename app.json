@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "SuriClock",
+    "slug": "suri-clock",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourdomain.suriclock",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SuriClock needs access to your location to record where you clock in and out."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourdomain.suriclock",
+      "permissions": ["ACCESS_FINE_LOCATION"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SuriClock to use your location."
+        }
+      ]
+    ],
+    "sdkVersion": "53.0.0"
+  }
+}

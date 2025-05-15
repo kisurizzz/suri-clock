@@ -1,0 +1,47 @@
+import React from "react";
+import { StyleSheet, View, Text, SafeAreaView } from "react-native";
+import { useAuth } from "../../contexts/AuthContext";
+
+const ProfileScreen = () => {
+  const { currentUser } = useAuth();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.subtitle}>User: {currentUser?.email}</Text>
+        <Text style={styles.message}>Profile management coming soon!</Text>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  content: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#7f8c8d",
+    marginBottom: 24,
+  },
+  message: {
+    fontSize: 18,
+    color: "#3498db",
+  },
+});
+
+export default ProfileScreen;
