@@ -24,6 +24,8 @@ yarn-debug.log
 # Firebase
 google-services.json
 GoogleService-Info.plist
+app/services/firebase.js
+app/services/
 
 # Android
 android/app/debug.keystore
