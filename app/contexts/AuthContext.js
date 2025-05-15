@@ -38,9 +38,12 @@ export const AuthProvider = ({ children }) => {
             console.log("User data from Firestore:", userData);
             console.log("Auth - Role from Firestore:", userData.role);
             console.log("Auth - Role type:", typeof userData.role);
-            console.log("Auth - Role comparison:", userData.role === "admin");
 
-            const isUserAdmin = userData.role === "admin";
+            // Make sure we're doing a strict comparison and converting to boolean
+            const userRole = userData.role || "";
+            const isUserAdmin = userRole.toLowerCase() === "admin";
+
+            console.log("Auth - Role comparison:", isUserAdmin);
             console.log(
               "Is user admin?",
               isUserAdmin,
@@ -151,9 +154,12 @@ export const AuthProvider = ({ children }) => {
         console.log("Login - User data from Firestore:", userData);
         console.log("Login - Role from Firestore:", userData.role);
         console.log("Login - Role type:", typeof userData.role);
-        console.log("Login - Role comparison:", userData.role === "admin");
 
-        const isUserAdmin = userData.role === "admin";
+        // Make sure we're doing a strict comparison and converting to boolean
+        const userRole = userData.role || "";
+        const isUserAdmin = userRole.toLowerCase() === "admin";
+
+        console.log("Login - Role comparison:", isUserAdmin);
         console.log("Login - Is user admin?", isUserAdmin);
 
         // Set both states together

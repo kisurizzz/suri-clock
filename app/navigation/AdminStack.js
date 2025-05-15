@@ -6,6 +6,8 @@ import ReportsScreen from "../screens/admin/ReportsScreen";
 import EmployeeDetailsScreen from "../screens/admin/EmployeeDetailsScreen";
 import EmployeeListScreen from "../screens/admin/EmployeeListScreen";
 import CreateAdminScreen from "../screens/admin/CreateAdminScreen";
+import VehicleManagementScreen from "../screens/admin/VehicleManagementScreen";
+import StationManagementScreen from "../screens/admin/StationManagementScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +60,22 @@ const AdminStack = () => {
         component={CreateAdminScreen}
         options={{
           title: "Create Admin Account",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="VehicleManagement"
+        component={VehicleManagementScreen}
+        options={{
+          title: "Vehicle Fleet Management",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="StationManagement"
+        component={StationManagementScreen}
+        options={{
+          title: "Station Management",
           headerShown: true,
         }}
       />

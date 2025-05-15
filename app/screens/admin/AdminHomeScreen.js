@@ -18,7 +18,20 @@ const AdminHomeScreen = ({ navigation }) => {
       user: currentUser?.email,
       isAdmin,
     });
-  }, [currentUser, isAdmin]);
+
+    // Redirect non-admin users to the employee stack
+    if (currentUser && isAdmin === false) {
+      console.log(
+        "Non-admin user detected in AdminHomeScreen, redirecting to EmployeeStack"
+      );
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "EmployeeStack" }],
+        })
+      );
+    }
+  }, [currentUser, isAdmin, navigation]);
 
   const handleLogout = async () => {
     try {
@@ -57,6 +70,20 @@ const AdminHomeScreen = ({ navigation }) => {
             onPress={() => navigation.navigate("EmployeeList")}
           >
             <Text style={styles.menuItemText}>Manage Employees</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate("VehicleManagement")}
+          >
+            <Text style={styles.menuItemText}>Manage Vehicle Fleet</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate("StationManagement")}
+          >
+            <Text style={styles.menuItemText}>Manage Stations</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

@@ -14,10 +14,16 @@ const AppNavigator = () => {
   const { currentUser, isAdmin, loading } = useAuth();
 
   useEffect(() => {
-    console.log("AppNavigator - Auth State:", {
+    console.log("AppNavigator - Auth State Updated:", {
       user: currentUser?.email,
-      isAdmin,
+      isAdmin: isAdmin,
+      isAdminType: typeof isAdmin,
       loading,
+      stack: !currentUser
+        ? "Auth Stack"
+        : isAdmin
+        ? "Admin Stack"
+        : "Employee Stack",
     });
   }, [currentUser, isAdmin, loading]);
 

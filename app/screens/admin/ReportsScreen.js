@@ -125,66 +125,94 @@ const ReportsScreen = () => {
       return userNames[item.userId];
     }
 
-    // If no userId or no cached name, fall back to email with a warning
-    if (!item.userId) {
-      console.warn("Session missing userId:", item.id);
-    } else if (!userNames[item.userId]) {
-      console.warn(`No name found for user ${item.userId}`);
+    // If we have a userId but no cached name, trigger a fetch
+    if (item.userId && !userNames[item.userId]) {
+      // Call fetchUserData but don't await it to avoid blocking render
+      fetchUserData(item.userId);
+      return "Loading..."; // Show loading state while fetching
     }
 
-    // Return email or a fallback
+    // If no userId, fall back to email with a warning
+    if (!item.userId) {
+      console.warn("Session missing userId:", item.id);
+      return item.userEmail || "Unknown User";
+    }
+
+    // Return email as fallback
     return item.userEmail || "Unknown User";
   };
 
-  const renderSession = ({ item }) => {
-    const userName = getUserName(item);
-    const hasName = item.userId && userNames[item.userId];
+  const renderSessionItem = ({ item }) => {
+    // Format date
+    const date = item.clockInTime?.toDate
+      ? new Date(item.clockInTime.toDate())
+      : new Date();
+    const formattedDate = date.toLocaleDateString();
+
+    // Format clock in time
+    const clockInTime = item.clockInTime?.toDate
+      ? new Date(item.clockInTime.toDate()).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "N/A";
+
+    // Format clock out time
+    const clockOutTime = item.clockOutTime?.toDate
+      ? new Date(item.clockOutTime.toDate()).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "N/A";
+
+    // Calculate duration
+    const durationHours = item.totalTime
+      ? Math.floor(item.totalTime / 3600)
+      : 0;
+    const durationMinutes = item.totalTime
+      ? Math.floor((item.totalTime % 3600) / 60)
+      : 0;
+    const formattedDuration = `${durationHours}h ${durationMinutes}m`;
+
+    // Format the vehicle information
+    const vehicle = item.vehicle
+      ? `${item.vehicle.make} ${item.vehicle.model} (${item.vehicle.registrationNumber})`
+      : "Not specified";
 
     return (
-      <View style={styles.sessionCard}>
+      <View style={styles.sessionItem}>
         <View style={styles.sessionHeader}>
-          <View style={styles.userInfo}>
-            {hasName ? (
-              <>
-                <Text style={styles.userName}>{userName}</Text>
-                <Text style={styles.userEmail}>{item.userEmail}</Text>
-              </>
-            ) : (
-              <Text style={styles.userName}>{item.userEmail}</Text>
-            )}
-          </View>
-          <Text style={styles.date}>
-            {new Date(item.clockInTime.toDate()).toLocaleDateString()}
-          </Text>
+          <Text style={styles.sessionDate}>{formattedDate}</Text>
+          <Text style={styles.sessionDuration}>{formattedDuration}</Text>
         </View>
 
         <View style={styles.sessionDetails}>
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeLabel}>Clock In</Text>
-            <Text style={styles.timeValue}>{formatTime(item.clockInTime)}</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Employee:</Text>
+            <Text style={styles.detailValue}>{getUserName(item)}</Text>
           </View>
 
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeLabel}>Clock Out</Text>
-            <Text style={styles.timeValue}>
-              {formatTime(item.clockOutTime)}
-            </Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Clock In:</Text>
+            <Text style={styles.detailValue}>{clockInTime}</Text>
           </View>
 
-          <View style={styles.timeBlock}>
-            <Text style={styles.timeLabel}>Duration</Text>
-            <Text style={styles.timeValue}>
-              {formatDuration(item.totalTime)}
-            </Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Clock Out:</Text>
+            <Text style={styles.detailValue}>{clockOutTime}</Text>
           </View>
-        </View>
 
-        <View style={styles.locationInfo}>
-          <Text style={styles.locationLabel}>Clock In Location:</Text>
-          <Text style={styles.locationValue}>
-            Lat: {item.clockInLocation.latitude.toFixed(6)}, Lon:{" "}
-            {item.clockInLocation.longitude.toFixed(6)}
-          </Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Vehicle:</Text>
+            <Text style={styles.detailValue}>{vehicle}</Text>
+          </View>
+
+          {item.notes && (
+            <View style={styles.notesContainer}>
+              <Text style={styles.detailLabel}>Notes:</Text>
+              <Text style={styles.notesText}>{item.notes}</Text>
+            </View>
+          )}
         </View>
       </View>
     );
@@ -206,7 +234,7 @@ const ReportsScreen = () => {
 
       <FlatList
         data={sessions}
-        renderItem={renderSession}
+        renderItem={renderSessionItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -239,7 +267,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 16,
   },
-  sessionCard: {
+  sessionItem: {
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 16,
@@ -255,54 +283,38 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
   },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 2,
-  },
-  userEmail: {
-    fontSize: 12,
-    color: "#7f8c8d",
-  },
-  date: {
+  sessionDate: {
     fontSize: 14,
     color: "#7f8c8d",
-    marginLeft: 8,
+  },
+  sessionDuration: {
+    fontSize: 14,
+    color: "#7f8c8d",
   },
   sessionDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     marginBottom: 12,
   },
-  timeBlock: {
-    flex: 1,
-  },
-  timeLabel: {
-    fontSize: 12,
-    color: "#7f8c8d",
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
-  timeValue: {
+  detailLabel: {
+    fontSize: 12,
+    color: "#7f8c8d",
+  },
+  detailValue: {
     fontSize: 14,
     color: "#2c3e50",
   },
-  locationInfo: {
+  notesContainer: {
     borderTopWidth: 1,
     borderTopColor: "#eee",
     paddingTop: 12,
   },
-  locationLabel: {
+  notesText: {
     fontSize: 12,
     color: "#7f8c8d",
-    marginBottom: 4,
-  },
-  locationValue: {
-    fontSize: 12,
-    color: "#34495e",
   },
   emptyText: {
     textAlign: "center",
